@@ -10,24 +10,28 @@ const EMPTY_FILES = {
 };
 
 const TERRAIN_SIZE = 128;
+const MESH_LOD_SEGMENTS = [4096, 2048, 1024];
 
 const Terrain = ({ maps, displacementScale }) => {
   const [height, colors] = useLoader(THREE.TextureLoader, [maps.elevation, maps.color]);
+  const reliefStrength = displacementScale * 1.6;
 
   return (
     <group position={[0, -3, 0]}>
       <Detailed distances={[0, 70, 140]}>
-        {[2048, 1024, 512].map((segments) => (
+        {MESH_LOD_SEGMENTS.map((segments) => (
           <mesh key={segments} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[TERRAIN_SIZE, TERRAIN_SIZE, segments, segments]} />
             <meshStandardMaterial
               color="white"
               map={colors}
-              metalness={0.15}
-              roughness={0.9}
+              metalness={0.08}
+              roughness={0.8}
               displacementMap={height}
-              displacementScale={displacementScale}
-              normalScale={new THREE.Vector2(1, 1)}
+              displacementScale={reliefStrength}
+              bumpMap={height}
+              bumpScale={Math.max(0.9, reliefStrength * 0.75)}
+              normalScale={new THREE.Vector2(1.5, 1.5)}
             />
           </mesh>
         ))}
@@ -39,7 +43,7 @@ const Terrain = ({ maps, displacementScale }) => {
 export default function App() {
   const [selectedFiles, setSelectedFiles] = useState(EMPTY_FILES);
   const [maps, setMaps] = useState({ elevation: "", color: "" });
-  const [displacementScale, setDisplacementScale] = useState(3.5);
+  const [displacementScale, setDisplacementScale] = useState(6.5);
   const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
@@ -83,7 +87,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <aside className="control-panel">
-        <div className="brand-mark">TERRAIN / LAB</div>
+        <div className="brand-mark">DEPTH WIZARD / ASCEND</div>
         <div className="intro">
           <p className="eyebrow">IMAGE-BASED ENVIRONMENT</p>
           <h1>Build a world from two maps.</h1>
@@ -116,7 +120,7 @@ export default function App() {
             <input
               type="range"
               min="0"
-              max="10"
+              max="20"
               step="0.1"
               value={displacementScale}
               onChange={(event) => setDisplacementScale(Number(event.target.value))}
